@@ -252,7 +252,13 @@ public class Section implements Comparable<Section> {
 	int getBiomeIndex(int biomeX, int biomeY, int biomeZ) {
 
 		int sizeBits = 2;
-		int val = (biomeY << sizeBits | biomeZ) << sizeBits | biomeX;
+		int val = (biomeY << sizeBits | biomeZ) << sizeBits | biomeX; // random picking
+
+		//val = (biomeX << sizeBits | biomeY) << sizeBits | biomeZ; // weird lines
+		//val = (biomeX << sizeBits | biomeZ) << sizeBits | biomeY; // weird lines
+		//val = (biomeY << sizeBits | biomeX) << sizeBits | biomeZ; // random picking
+		//val = (biomeZ << sizeBits | biomeY) << sizeBits | biomeX; // weird lines up
+		//val = (biomeZ << sizeBits | biomeX) << sizeBits | biomeY; // weird lines
 		//System.out.println("biomeindex from: " + biomeX + " -> " + biomeY + " -> "+biomeZ+ " ==== " + val);
 		return val;
 

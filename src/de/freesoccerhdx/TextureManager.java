@@ -17,7 +17,10 @@ import java.util.zip.ZipInputStream;
 
 public class TextureManager {
 
-    private HashMap<String,Integer> textureMap = new HashMap<>();
+    public static final int COLORTYPE_WATER = 1;
+
+    private HashMap<String,Integer> texturePixelMap = new HashMap<>();
+    private HashMap<String,BufferedImage> textureMap = new HashMap<>();
 
     private TextureManager(){
 
@@ -27,11 +30,56 @@ public class TextureManager {
         return textureMap.keySet();
     }
 
-    public int getTexturePixel(String name){
-        if(name.startsWith("minecraft:")){
-            name = name.split("minecraft:",2)[1];
+
+    public static Color addColor(Color ac, Color bc){
+        int r = ac.getRed() + bc.getRed();
+        int g = ac.getGreen() + bc.getGreen();
+        int b = ac.getBlue() + bc.getBlue();
+
+        return new Color(Math.min(255,r),Math.min(255,g),Math.min(255,b));
+    }
+
+    public static Color subtractColor(Color ac, Color bc){
+        int r = ac.getRed() - bc.getRed();
+        int g = ac.getGreen() - bc.getGreen();
+        int b = ac.getBlue() - bc.getBlue();
+
+        return new Color(Math.max(0,r),Math.max(0,g),Math.max(0,b));
+    }
+
+    public BufferedImage getTexture(String name, int colormodification, int colortype){
+
+        BufferedImage image = getTexture(name);
+        int pixel = getTexturePixel(name);
+        Color pixelC = new Color(pixel);
+
+        if(image != null){
+            if(colortype == COLORTYPE_WATER) {
+                for (int x = 0; x < image.getHeight(); x++) {
+                    for (int z = 0; z < image.getWidth(); z++) {
+                        /*
+                        Color before = new Color(image.getRGB(x,z));
+                        Color modi = new Color(colormodification);
+
+                        Color newcolor = subtractColor(before,pixelC);
+                        newcolor = addColor(newcolor,modi);
+                        */
+
+                        //Color before = new Color(image.getRGB(x,z));
+                        //Color modi = new Color(colormodification);
+                        //addColor(before,modi).getRGB()
+
+                        image.setRGB(x, z, colormodification);
+                    }
+                }
+            }
         }
 
+        return image;
+    }
+
+    public BufferedImage getTexture(String name){
+        name = reduceName(name);
 
         if(textureMap.containsKey(name+".png")){
             return textureMap.get(name+".png");
@@ -40,7 +88,27 @@ public class TextureManager {
             return textureMap.get(name+"_top.png");
         }
 
+        return null;
+    }
+
+    public int getTexturePixel(String name){
+        name = reduceName(name);
+
+        if(texturePixelMap.containsKey(name+".png")) {
+            return texturePixelMap.get(name + ".png");
+        }
+        if(texturePixelMap.containsKey(name+"_top.png")){
+            return texturePixelMap.get(name+"_top.png");
+        }
+
         return 0;
+    }
+
+    private String reduceName(String name) {
+        if(name.startsWith("minecraft:")){
+            name = name.split("minecraft:",2)[1];
+        }
+        return name;
     }
 
     private int getTexturePixel(BufferedImage img){
@@ -92,9 +160,16 @@ public class TextureManager {
                                 InputStream stream = Main.class.getResourceAsStream("/"+name);
                                 //System.out.println("Path: " + jar.toString()+"/"+name + " stream="+stream);
                                 img = ImageIO.read(stream);
-                                int texturePixel = getTexturePixel(img);
-                                if(texturePixel != -1){
-                                    textureMap.put(name.split("/")[1],texturePixel);
+                                if(img == null){
+                                    System.out.println("IMAGE IS NULL?! -> " + name + " stream="+stream);
+                                    img.getHeight();
+                                }else {
+                                    int texturePixel = getTexturePixel(img);
+                                    if (texturePixel != -1) {
+                                        texturePixelMap.put(name.split("/")[1], texturePixel);
+
+                                        textureMap.put(name.split("/")[1], resizeImage(img, 16, 16));
+                                    }
                                 }
 
                             } catch (Exception ex) {
@@ -112,8 +187,8 @@ public class TextureManager {
         }
 
         // loading some defaults:
-        textureMap.put("water.png",new Color(	63, 118, 228).getRGB());
-        textureMap.put("lava.png",new Color(	217, 98, 0).getRGB());
+      //  texturePixelMap.put("water.png",new Color(	63, 118, 228).getRGB());
+        texturePixelMap.put("lava.png",new Color(	217, 98, 0).getRGB());
 
         //textureMap.put("grass_block.png",new Color(	9470285).getRGB());
     }
@@ -123,6 +198,20 @@ public class TextureManager {
         TextureManager textureManager = new TextureManager();
         textureManager.loadData();
         return textureManager;
+    }
+
+    private static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight){
+        try {
+            BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics2D = resizedImage.createGraphics();
+            graphics2D.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+            graphics2D.dispose();
+            return resizedImage;
+        }catch (Exception exception){
+            exception.printStackTrace();
+        }
+
+        return null;
     }
 
 

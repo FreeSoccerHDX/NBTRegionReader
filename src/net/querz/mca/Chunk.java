@@ -1,6 +1,7 @@
 package net.querz.mca;
 
 import de.freesoccerhdx.BiomeData;
+import de.freesoccerhdx.BlockData;
 import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.ListTag;
 import net.querz.nbt.io.NamedTag;
@@ -338,7 +339,15 @@ public class Chunk implements Iterable<Section> {
 		if (section == null) {
 			return null;
 		}
-		return section.getBlockBiomeAt(blockX,(blockY),blockZ);
+		return section.getBlockBiomeAt(blockX>>2,(blockY)>>2,blockZ>>2);
+	}
+
+	public BlockData getBlockData(int blockX, int blockY, int blockZ) {
+		CompoundTag tag = getBlockStateAt(blockX,blockY,blockZ);
+		if(tag != null) {
+			return new BlockData(tag);
+		}
+		return null;
 	}
 
 	public CompoundTag getBlockStateAt(int blockX, int blockY, int blockZ) {
